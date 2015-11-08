@@ -84,13 +84,12 @@ module.exports = (robot) ->
     endTimeAsDate = new Date(
       now.getFullYear(), now.getMonth(), now.getDate(),
       endHour, endMinute, 0, 0)
-    if (startTimeAsDate <= endTimeAsDate) {
+    if (startTimeAsDate <= endTimeAsDate)
       # Something like 08:00 - 16:00
-      return (now >= startTimeAsDate && now < endTimeAsDate);
-    } else {
+      return (now >= startTimeAsDate && now < endTimeAsDate)
+    else
       # Something like 18:00 - 02:00
-      return (now >= startTimeAsDate || now < endTimeAsDate);
-    }
+      return (now >= startTimeAsDate || now < endTimeAsDate)
 
   # keep this different from the legacy URL in httpd.coffee
   robot.router.post "/heroku/keepalive", keepaliveCallback
