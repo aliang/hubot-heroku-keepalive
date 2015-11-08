@@ -26,8 +26,10 @@ module.exports = (robot) ->
   wakeUpTime = (process.env.HUBOT_HEROKU_WAKEUP_TIME or '6:00').split(':')
   sleepTime = (process.env.HUBOT_HEROKU_SLEEP_TIME or '22:00').split(':')
 
-  wakeUpOffset = 60 * wakeUpTime[0]  + 1 * wakeUpTime[1]
-  sleepOffset  = 60 * sleepTime[0]   + 1 * sleepTime[1]
+  wakeUpHour = wakeUpTime[0]
+  wakeUpMinute = wakeUpTime[1]
+  sleepHour = sleepTime[0]
+  sleepMinute = sleepTime[1]
 
   keepaliveUrl = process.env.HUBOT_HEROKU_KEEPALIVE_URL or process.env.HEROKU_URL
   if keepaliveUrl and not keepaliveUrl.match(/\/$/)
@@ -51,10 +53,7 @@ module.exports = (robot) ->
     robot.herokuKeepaliveIntervalId = setInterval =>
       robot.logger.info 'keepalive ping'
 
-      now = new Date()
-      nowOffset    = 60 * now.getHours() + now.getMinutes()
-
-      if (nowOffset >= wakeUpOffset && nowOffset < sleepOffset)
+      if (currentlyBetweenTimes(wakeUpHour, wakeUpMinute, sleepHour, sleepMinute))
         performPing("#{keepaliveUrl}heroku/keepalive")
       else
         robot.logger.info "Skipping keep alive, time to rest"
@@ -74,6 +73,23 @@ module.exports = (robot) ->
         robot.emit 'error', err
       else
         robot.logger.info "keepalive pong: #{res.statusCode} #{body}"
+
+  currentlyBetweenTimes = (startHour, startMinute, endHour, endMinute) ->
+    now = new Date()
+    # Normalize times to be today and ignore seconds and millis
+    startTimeAsDate = new Date(
+      now.getFullYear(), now.getMonth(), now.getDate(),
+      startHour, startMinute, 0, 0)
+    endTimeAsDate = new Date(
+      now.getFullYear(), now.getMonth(), now.getDate(),
+      endHour, endMinute, 0, 0)
+    if (startTimeAsDate <= endTimeAsDate) {
+      # Something like 08:00 - 16:00
+      return (now >= startTimeAsDate && now < endTimeAsDate);
+    } else {
+      # Something like 18:00 - 02:00
+      return (now >= startTimeAsDate || now < endTimeAsDate);
+    }
 
   # keep this different from the legacy URL in httpd.coffee
   robot.router.post "/heroku/keepalive", keepaliveCallback
