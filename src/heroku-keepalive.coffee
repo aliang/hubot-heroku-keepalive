@@ -21,6 +21,7 @@
 #
 # Author:
 #   Josh Nichols <technicalpickles@github.com>
+#   Alvin Liang <ayliang@gmail.com>
 
 module.exports = (robot) ->
   wakeUpTime = (process.env.HUBOT_HEROKU_WAKEUP_TIME or '6:00').split(':')
