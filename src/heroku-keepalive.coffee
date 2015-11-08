@@ -55,12 +55,7 @@ module.exports = (robot) ->
       nowOffset    = 60 * now.getHours() + now.getMinutes()
 
       if (nowOffset >= wakeUpOffset && nowOffset < sleepOffset)
-        robot.http("#{keepaliveUrl}heroku/keepalive").post() (err, res, body) =>
-          if err?
-            robot.logger.info "keepalive pong: #{err}"
-            robot.emit 'error', err
-          else
-            robot.logger.info "keepalive pong: #{res.statusCode} #{body}"
+        performPing("#{keepaliveUrl}heroku/keepalive")
       else
         robot.logger.info "Skipping keep alive, time to rest"
 
@@ -71,6 +66,14 @@ module.exports = (robot) ->
   keepaliveCallback = (req, res) ->
     res.set 'Content-Type', 'text/plain'
     res.send 'OK'
+
+  performPing = (url) ->
+    robot.http(url).post() (err, res, body) =>
+      if err?
+        robot.logger.info "keepalive pong: #{err}"
+        robot.emit 'error', err
+      else
+        robot.logger.info "keepalive pong: #{res.statusCode} #{body}"
 
   # keep this different from the legacy URL in httpd.coffee
   robot.router.post "/heroku/keepalive", keepaliveCallback
